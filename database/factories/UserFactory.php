@@ -26,11 +26,23 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'username' => strtoupper(fake()->unique()->lexify('???')).'-'.fake()->numberBetween(1000, 9999),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => 'admin',
+            'is_active' => true,
+            'is_super_admin' => false,
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_super_admin' => true,
+            'role' => 'super_admin',
+        ]);
     }
 
     /**

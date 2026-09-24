@@ -35,5 +35,9 @@ class DatabaseSeeder extends Seeder
                 'school_id' => $school->id,
             ]
         );
+
+        $this->call(StudentSeeder::class);
+        $this->call(InvoiceSeeder::class);
+        $this->call(AttendanceSeeder::class);
     }
 }

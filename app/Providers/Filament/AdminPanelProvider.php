@@ -2,7 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Pages\Auth\Login;
+use App\Http\Middleware\SetLocaleMiddleware;
 use App\Models\School;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -11,6 +15,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -27,8 +32,12 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
+            ->profile(EditProfile::class, isSimple: false)
             ->tenant(School::class, slugAttribute: 'slug')
+            ->brandName(fn () => Filament::getTenant()?->name ?? config('app.name'))
+            ->brandLogo(fn () => Filament::getTenant()?->logo_path ? asset('storage/'.Filament::getTenant()->logo_path) : null)
+            ->favicon(fn () => Filament::getTenant()?->favicon_path ? asset('storage/'.Filament::getTenant()->favicon_path) : null)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -41,6 +50,10 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => view('filament.components.language-switcher')
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -51,6 +64,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                SetLocaleMiddleware::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
